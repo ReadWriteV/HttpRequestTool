@@ -1,0 +1,13 @@
+.vscode/
+
+debug/
+
+release/
+
+.qmake.stash
+
+Makefile
+
+Makefile.*
+
+ui_mainwindow.h
