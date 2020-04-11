@@ -38,18 +38,24 @@ int MainWindow::sendRequest(httpRequest *httpRequest, httpReply *httpReply)
     case POST:
         reply = manager->post(request, httpRequest->postData);
         break;
-    case PUT:
-        reply = manager->put(request, httpRequest->postData);
-        break;
-    case HEAD:
-        reply = manager->head(request);
-        break;
-    case DELETE:
-        reply = manager->deleteResource(request);
-        break;
     default:
         return -1;
         break;
+    }
+    connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
+    connect(&timer, SIGNAL(timeout()), &eventLoop, SLOT(quit()));
+    timer.start(30 * 1000);
+    eventLoop.exec();
+    if (timer.isActive())
+    {
+        timer.stop();
+    }
+    else
+    {
+        disconnect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
+        reply->abort();
+        reply->deleteLater();
+        return -1;
     }
     httpReply->response = reply->readAll();
     statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
@@ -112,5 +118,5 @@ void MainWindow::sendBtnClicked()
     }
     retCode = sendRequest(&request, &reply);
     QString res = reply.response;
-    ui->textEdit->setText("dfsafas");
+    ui->textBrowser->setText(res);
 }
