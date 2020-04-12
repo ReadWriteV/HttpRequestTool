@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete manager;
 }
 
 int MainWindow::sendRequest(httpRequest *httpRequest, httpReply *httpReply)
@@ -37,6 +38,15 @@ int MainWindow::sendRequest(httpRequest *httpRequest, httpReply *httpReply)
         break;
     case POST:
         reply = manager->post(request, httpRequest->postData);
+        break;
+    case PUT:
+        reply = manager->put(request, httpRequest->postData);
+        break;
+    case HEAD:
+        reply = manager->head(request);
+        break;
+    case DELETE:
+        reply = manager->deleteResource(request);
         break;
     default:
         return -1;
@@ -85,13 +95,9 @@ void MainWindow::sendBtnClicked()
 {
     httpRequest request;
     httpHeader userAgent;
-    httpHeader auth;
     httpReply reply;
     QString urlString;
-    QString authString;
-    QByteArray basic;
     QUrl url;
-    int retCode = 0;
 
     urlString = ui->lineEdit->text();
     if (urlString.isEmpty())
@@ -99,11 +105,19 @@ void MainWindow::sendBtnClicked()
         QMessageBox::information(this, tr("Error"), tr("Please input valid URL!"));
         return;
     }
-    url.setUrl(urlString);
+    if (ui->comboBox_2->currentIndex() == 0)
+    {
+        url.setUrl("http://" + urlString);
+    }
     request.url = url;
     userAgent.key.append("User-Agent");
-    userAgent.value.append("qhttpc 1.0");
+    userAgent.value.append("HttpRequestTool");
     request.header.append(userAgent);
+
+    if (!ui->textEdit->toPlainText().isEmpty())
+    {
+        request.postData.append(ui->textEdit->toPlainText());
+    }
 
     switch (ui->comboBox->currentIndex())
     {
@@ -113,10 +127,19 @@ void MainWindow::sendBtnClicked()
     case 1:
         request.method = POST;
         break;
+    case 2:
+        request.method = PUT;
+        break;
+    case 3:
+        request.method = HEAD;
+        break;
+    case 4:
+        request.method = DELETE;
+        break;
     default:
         break;
     }
-    retCode = sendRequest(&request, &reply);
+    sendRequest(&request, &reply);
     QString res = reply.response;
     ui->textBrowser->setText(res);
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>633</height>
+    <width>745</width>
+    <height>630</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,6 +30,9 @@
     <property name="minimumContentsLength">
      <number>0</number>
     </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
     <item>
      <property name="text">
       <string>GET</string>
@@ -40,13 +43,28 @@
       <string>POST</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>PUT</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>HEAD</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>DELETE</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>210</x>
       <y>20</y>
-      <width>481</width>
+      <width>391</width>
       <height>41</height>
      </rect>
     </property>
@@ -74,9 +92,34 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>140</y>
+      <y>260</y>
       <width>701</width>
       <height>351</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBox_2">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>20</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>http://</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>80</y>
+      <width>701</width>
+      <height>171</height>
      </rect>
     </property>
    </widget>
