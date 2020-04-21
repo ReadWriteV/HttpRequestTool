@@ -4,6 +4,10 @@
 #include <QtCore/QString>
 #include <QtCore/QTimer>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonParseError>
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonValue>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -18,38 +22,53 @@ MainWindow::~MainWindow()
     delete manager;
 }
 
-int MainWindow::sendRequest(httpRequest *httpRequest, httpReply *httpReply)
+void MainWindow::sendBtnClicked()
 {
     QNetworkRequest request;
     QNetworkReply *reply;
-    QVariant statusCode;
+    QString urlString;
+    QUrl url;
+    QByteArray postData;
     QEventLoop eventLoop;
     QTimer timer;
+    QVariant statusCode;
 
-    request.setUrl(httpRequest->url);
-    for (int i = 0; i < httpRequest->header.size(); i++)
+    urlString = ui->lineEdit->text();
+    if (urlString.isEmpty())
     {
-        request.setRawHeader(httpRequest->header.at(i).key, httpRequest->header.at(i).value);
+        QMessageBox::information(this, tr("Error"), tr("Please input valid URL!"));
+        return;
     }
-    switch (httpRequest->method)
+    if (ui->comboBox_2->currentIndex() == 0)
     {
-    case GET:
+        url.setUrl("http://" + urlString);
+    }
+    request.setUrl(url);
+
+    if (!ui->textEdit->toPlainText().isEmpty())
+    {
+        postData.append(ui->textEdit->toPlainText());
+    }
+
+    switch (ui->comboBox->currentIndex())
+    {
+    case 0: // GET
         reply = manager->get(request);
         break;
-    case POST:
-        reply = manager->post(request, httpRequest->postData);
+    case 1: // POST
+        request.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader, "application/json");
+        reply = manager->post(request, postData);
         break;
-    case PUT:
-        reply = manager->put(request, httpRequest->postData);
+    case 2: // PUT
+        reply = manager->put(request, postData);
         break;
-    case HEAD:
+    case 3: // HEAD
         reply = manager->head(request);
         break;
-    case DELETE:
+    case 4: // DELETE
         reply = manager->deleteResource(request);
         break;
     default:
-        return -1;
         break;
     }
     connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
@@ -65,81 +84,33 @@ int MainWindow::sendRequest(httpRequest *httpRequest, httpReply *httpReply)
         disconnect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
         reply->abort();
         reply->deleteLater();
-        return -1;
-    }
-    httpReply->response = reply->readAll();
-    statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-    if (statusCode.isValid())
-    {
-        httpReply->code = statusCode.toInt();
-    }
-    QList<QByteArray> list = reply->rawHeaderList();
-    for (int i = 0; i < list.size(); i++)
-    {
-        httpHeader header;
-        header.key = list.at(i);
-        header.value = reply->rawHeader(list.at(i));
-        httpReply->header.append(header);
-    }
-    httpReply->code = statusCode.toInt();
-    if (reply != nullptr)
-    {
-        disconnect(reply, SIGNAL(readyRead()), &eventLoop, SLOT(quit()));
-        reply->abort();
-        reply->deleteLater();
-    }
-    return httpReply->code;
-}
-
-void MainWindow::sendBtnClicked()
-{
-    httpRequest request;
-    httpHeader userAgent;
-    httpReply reply;
-    QString urlString;
-    QUrl url;
-
-    urlString = ui->lineEdit->text();
-    if (urlString.isEmpty())
-    {
-        QMessageBox::information(this, tr("Error"), tr("Please input valid URL!"));
         return;
     }
-    if (ui->comboBox_2->currentIndex() == 0)
+    statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    ui->label_2->setText(statusCode.toString());
+    QVariant variant = reply->header(QNetworkRequest::ContentTypeHeader);
+    if (variant.isValid())
     {
-        url.setUrl("http://" + urlString);
+        if (variant.toString().contains("text/html", Qt::CaseInsensitive))
+        {
+            QString res = reply->readAll();
+            ui->textBrowser->setText(res);
+        }
+        else if (variant.toString().contains("application/json", Qt::CaseInsensitive))
+        {
+            QByteArray bytes = reply->readAll();
+            QJsonParseError jsonError;
+            QJsonDocument document = QJsonDocument::fromJson(bytes, &jsonError);
+            if (jsonError.error != QJsonParseError::NoError)
+            {
+                ui->textBrowser->setText("Error formatting json");
+                return;
+            }
+            ui->textBrowser->setText(document.toJson(QJsonDocument::Indented));
+        }
+        else
+        {
+            ui->textBrowser->setText("Error");
+        }
     }
-    request.url = url;
-    userAgent.key.append("User-Agent");
-    userAgent.value.append("HttpRequestTool");
-    request.header.append(userAgent);
-
-    if (!ui->textEdit->toPlainText().isEmpty())
-    {
-        request.postData.append(ui->textEdit->toPlainText());
-    }
-
-    switch (ui->comboBox->currentIndex())
-    {
-    case 0:
-        request.method = GET;
-        break;
-    case 1:
-        request.method = POST;
-        break;
-    case 2:
-        request.method = PUT;
-        break;
-    case 3:
-        request.method = HEAD;
-        break;
-    case 4:
-        request.method = DELETE;
-        break;
-    default:
-        break;
-    }
-    sendRequest(&request, &reply);
-    QString res = reply.response;
-    ui->textBrowser->setText(res);
 }
