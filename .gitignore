@@ -11,3 +11,5 @@ Makefile
 Makefile.*
 
 ui_mainwindow.h
+
+*.rc

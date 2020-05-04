@@ -22,3 +22,4 @@ HEADERS += mainwindow.h
 FORMS += mainwindow.ui
 SOURCES += main.cpp mainwindow.cpp
 RESOURCES += HttpRequestTool.qrc
+RC_ICONS = images/icon.ico
