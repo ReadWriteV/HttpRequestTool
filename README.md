@@ -12,8 +12,16 @@ qmake
 make
 ```
 
-## Feature
+## Features
 
 + Supported HTTP method: GET, POST, PUT, HEAD, DELETE
 
 + Automatic format json response
+
+## Todo List
+
+---------
+
++ [x] JSON format Response
+
++ [ ] History display
