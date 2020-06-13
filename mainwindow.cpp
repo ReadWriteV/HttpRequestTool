@@ -12,14 +12,27 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     manager = new QNetworkAccessManager(this);
+    completer = new QCompleter();
+    listModel = new QStringListModel();
+
     connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(sendBtnClicked()));
+    connect(ui->pushButton, SIGNAL(clicked(bool)), this, SLOT(AddComplete()));
+
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+    completer->setFilterMode(Qt::MatchContains);
+    completer->setMaxVisibleItems(5);
+    completer->setModel(listModel);
+    ui->lineEdit->setCompleter(completer);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
     delete manager;
+    delete completer;
 }
 
 void MainWindow::sendBtnClicked()
@@ -74,7 +87,7 @@ void MainWindow::sendBtnClicked()
     }
     connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
     connect(&timer, SIGNAL(timeout()), &eventLoop, SLOT(quit()));
-    timer.start(30 * 1000);
+    timer.start(10 * 1000);
     eventLoop.exec();
     if (timer.isActive())
     {
@@ -127,6 +140,20 @@ void MainWindow::sendBtnClicked()
         else
         {
             ui->textBrowser->setText("Error");
+        }
+    }
+}
+
+void MainWindow::AddComplete()
+{
+    QString text = ui->lineEdit->text();
+    if (QString::compare(text, QString("")) != 0)
+    {
+        bool is_contains = historyList.contains(text, Qt::CaseInsensitive);
+        if (!is_contains)
+        {
+            historyList << text;
+            listModel->setStringList(historyList);
         }
     }
 }
