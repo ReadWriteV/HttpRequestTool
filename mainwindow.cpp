@@ -69,6 +69,7 @@ void MainWindow::sendBtnClicked()
         reply = manager->deleteResource(request);
         break;
     default:
+        reply = nullptr;
         break;
     }
     connect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
@@ -82,11 +83,26 @@ void MainWindow::sendBtnClicked()
     else
     {
         disconnect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
-        reply->abort();
-        reply->deleteLater();
+        if (reply != nullptr)
+        {
+            reply->abort();
+            reply->deleteLater();
+        }
         return;
     }
     statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    if (statusCode.toInt() / 100 == 2)
+    {
+        ui->label_2->setStyleSheet("color: green");
+    }
+    else if (statusCode.toInt() / 100 == 3)
+    {
+        ui->label_2->setStyleSheet("color: blue");
+    }
+    else
+    {
+        ui->label_2->setStyleSheet("color: red");
+    }
     ui->label_2->setText(statusCode.toString());
     QVariant variant = reply->header(QNetworkRequest::ContentTypeHeader);
     if (variant.isValid())
