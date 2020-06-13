@@ -25,3 +25,5 @@ make
 + [x] JSON format Response
 
 + [ ] History display
+
++ [ ] Loading animation
